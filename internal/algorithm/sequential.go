@@ -1,37 +1,31 @@
-package main
+package algorithm
 
 import (
 	"math/rand"
 	"sort"
+
+	"bees_knapsack/internal/problem"
 )
 
-type Params struct {
-	NumScouts        int
-	NumBestSites     int
-	NumEliteSites    int
-	NumEliteForagers int
-	NumBestForagers  int
-	InitPatchSize    int
-	MaxIterations    int
-}
-
 type BeesAlgorithm struct {
-	problem *Problem
+	problem *problem.Problem
 	params  Params
 	rng     *rand.Rand
 }
 
-func NewBeesAlgorithm(problem *Problem, params Params, seed int64) *BeesAlgorithm {
+func NewBeesAlgorithm(p *problem.Problem, params Params, seed int64) *BeesAlgorithm {
 	return &BeesAlgorithm{
-		problem: problem,
+		problem: p,
 		params:  params,
 		rng:     rand.New(rand.NewSource(seed)),
 	}
 }
 
-func (ba *BeesAlgorithm) Run() Solution {
+func (ba *BeesAlgorithm) Name() string { return "Sequential" }
+
+func (ba *BeesAlgorithm) Run() problem.Solution {
 	scouts := ba.initializeScouts()
-	best := scouts[0].clone()
+	best := scouts[0].Clone()
 
 	for iter := 0; iter < ba.params.MaxIterations; iter++ {
 		sort.Slice(scouts, func(i, j int) bool {
@@ -39,10 +33,10 @@ func (ba *BeesAlgorithm) Run() Solution {
 		})
 
 		if scouts[0].Fitness > best.Fitness {
-			best = scouts[0].clone()
+			best = scouts[0].Clone()
 		}
 
-		nextScouts := make([]Solution, ba.params.NumScouts)
+		nextScouts := make([]problem.Solution, ba.params.NumScouts)
 
 		for i := 0; i < ba.params.NumEliteSites; i++ {
 			nextScouts[i] = ba.localSearch(scouts[i], ba.params.NumEliteForagers)
@@ -62,9 +56,9 @@ func (ba *BeesAlgorithm) Run() Solution {
 	return best
 }
 
-func (ba *BeesAlgorithm) initializeScouts() []Solution {
+func (ba *BeesAlgorithm) initializeScouts() []problem.Solution {
 	numItems := len(ba.problem.Items)
-	scouts := make([]Solution, ba.params.NumScouts)
+	scouts := make([]problem.Solution, ba.params.NumScouts)
 
 	for i := range scouts {
 		scouts[i] = ba.newRandomSolution()
@@ -74,20 +68,20 @@ func (ba *BeesAlgorithm) initializeScouts() []Solution {
 	return scouts
 }
 
-func (ba *BeesAlgorithm) newRandomSolution() Solution {
-	bits := randomSolution(len(ba.problem.Items), ba.rng)
-	return Solution{
+func (ba *BeesAlgorithm) newRandomSolution() problem.Solution {
+	bits := problem.RandomSolution(len(ba.problem.Items), ba.rng)
+	return problem.Solution{
 		Bits:      bits,
 		Fitness:   ba.problem.Evaluate(bits),
 		PatchSize: ba.params.InitPatchSize,
 	}
 }
 
-func (ba *BeesAlgorithm) localSearch(site Solution, numForagers int) Solution {
-	best := site.clone()
+func (ba *BeesAlgorithm) localSearch(site problem.Solution, numForagers int) problem.Solution {
+	best := site.Clone()
 
 	for f := 0; f < numForagers; f++ {
-		candidateBits := neighborSolution(site.Bits, site.PatchSize, ba.rng)
+		candidateBits := problem.NeighborSolution(site.Bits, site.PatchSize, ba.rng)
 		candidateFitness := ba.problem.Evaluate(candidateBits)
 
 		if candidateFitness > best.Fitness {

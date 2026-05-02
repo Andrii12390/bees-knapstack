@@ -1,4 +1,4 @@
-package main
+package problem
 
 type Item struct {
 	Name   string
@@ -11,7 +11,7 @@ type Problem struct {
 	Capacity int
 }
 
-func (p *Problem) Evaluate(solution []int) int {
+func (p *Problem) Evaluate(solution []uint8) int {
 	totalWeight := 0
 	totalValue := 0
 
@@ -29,7 +29,7 @@ func (p *Problem) Evaluate(solution []int) int {
 	return totalValue
 }
 
-func (p *Problem) TakenItems(solution []int) []Item {
+func (p *Problem) TakenItems(solution []uint8) []Item {
 	taken := make([]Item, 0)
 	for i, bit := range solution {
 		if bit == 1 {
@@ -39,7 +39,7 @@ func (p *Problem) TakenItems(solution []int) []Item {
 	return taken
 }
 
-func (p *Problem) TotalWeight(solution []int) int {
+func (p *Problem) TotalWeight(solution []uint8) int {
 	total := 0
 	for i, taken := range solution {
 		if taken == 1 {

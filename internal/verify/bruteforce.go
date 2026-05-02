@@ -1,23 +1,27 @@
-package main
+package verify
 
 import (
 	"fmt"
 	"strings"
+
+	"bees_knapsack/internal/algorithm"
+	"bees_knapsack/internal/benchmark"
+	"bees_knapsack/internal/problem"
 )
 
-func bruteForce(problem *Problem) ([]int, int) {
-	n := len(problem.Items)
+func bruteForce(p *problem.Problem) ([]uint8, int) {
+	n := len(p.Items)
 	bestValue := 0
-	bestBits := make([]int, n)
+	bestBits := make([]uint8, n)
 
 	for mask := 0; mask < (1 << n); mask++ {
-		bits := make([]int, n)
+		bits := make([]uint8, n)
 		for i := 0; i < n; i++ {
 			if mask&(1<<i) != 0 {
-				bits[i] = 1
+				bits[i] = uint8(1)
 			}
 		}
-		value := problem.Evaluate(bits)
+		value := p.Evaluate(bits)
 		if value > bestValue {
 			bestValue = value
 			bestBits = bits
@@ -29,17 +33,21 @@ func bruteForce(problem *Problem) ([]int, int) {
 
 type TestCase struct {
 	Name        string
-	Problem     *Problem
+	Problem     *problem.Problem
 	ExpectedMin int
 }
 
-func RunVerification() {
+func RunVerification(strategyName string, numWorkers int) {
+	if strategyName == "" {
+		strategyName = "Sequential"
+	}
+
 	testCases := []TestCase{
 		{
 			Name: "All items fit",
-			Problem: &Problem{
+			Problem: &problem.Problem{
 				Capacity: 100,
-				Items: []Item{
+				Items: []problem.Item{
 					{Name: "A", Weight: 5, Value: 10},
 					{Name: "B", Weight: 5, Value: 20},
 					{Name: "C", Weight: 5, Value: 30},
@@ -48,9 +56,9 @@ func RunVerification() {
 		},
 		{
 			Name: "Only one item fits",
-			Problem: &Problem{
+			Problem: &problem.Problem{
 				Capacity: 6,
-				Items: []Item{
+				Items: []problem.Item{
 					{Name: "A", Weight: 5, Value: 20},
 					{Name: "B", Weight: 5, Value: 35},
 					{Name: "C", Weight: 5, Value: 50},
@@ -59,9 +67,9 @@ func RunVerification() {
 		},
 		{
 			Name: "Greedy trap (ratio heuristic fails)",
-			Problem: &Problem{
+			Problem: &problem.Problem{
 				Capacity: 6,
-				Items: []Item{
+				Items: []problem.Item{
 					{Name: "A (ratio=10)", Weight: 1, Value: 10},
 					{Name: "B (ratio=3)", Weight: 3, Value: 9},
 					{Name: "C (ratio=2.3)", Weight: 3, Value: 7},
@@ -70,9 +78,9 @@ func RunVerification() {
 		},
 		{
 			Name: "Nothing fits",
-			Problem: &Problem{
+			Problem: &problem.Problem{
 				Capacity: 2,
-				Items: []Item{
+				Items: []problem.Item{
 					{Name: "A", Weight: 5, Value: 100},
 					{Name: "B", Weight: 8, Value: 200},
 				},
@@ -80,9 +88,9 @@ func RunVerification() {
 		},
 		{
 			Name: "Medium instance (10 items)",
-			Problem: &Problem{
+			Problem: &problem.Problem{
 				Capacity: 20,
-				Items: []Item{
+				Items: []problem.Item{
 					{Name: "item1", Weight: 6, Value: 10},
 					{Name: "item2", Weight: 4, Value: 40},
 					{Name: "item3", Weight: 12, Value: 30},
@@ -101,6 +109,8 @@ func RunVerification() {
 	passes := 0
 	separator := strings.Repeat("─", 52)
 
+	fmt.Printf("Strategy: %s | Workers: %d\n", strategyName, numWorkers)
+
 	for i, tc := range testCases {
 		fmt.Printf("\n%s\n", separator)
 		fmt.Printf("Test %d: %s\n", i+1, tc.Name)
@@ -112,7 +122,7 @@ func RunVerification() {
 
 		baValue := 0
 		for run := 0; run < 5; run++ {
-			params := Params{
+			params := algorithm.Params{
 				NumScouts:        20,
 				NumBestSites:     6,
 				NumEliteSites:    2,
@@ -121,7 +131,11 @@ func RunVerification() {
 				InitPatchSize:    3,
 				MaxIterations:    300,
 			}
-			ba := NewBeesAlgorithm(tc.Problem, params, int64(run+42))
+			ba := benchmark.MakeStrategy(strategyName, tc.Problem, params, numWorkers, int64(run+42))
+			if ba == nil {
+				fmt.Printf("Unknown strategy: %s\n", strategyName)
+				return
+			}
 			result := ba.Run()
 			if result.Fitness > baValue {
 				baValue = result.Fitness
@@ -150,7 +164,7 @@ func RunVerification() {
 	fmt.Printf("%s\n\n", separator)
 }
 
-func itemNames(items []Item) string {
+func itemNames(items []problem.Item) string {
 	if len(items) == 0 {
 		return "(none)"
 	}

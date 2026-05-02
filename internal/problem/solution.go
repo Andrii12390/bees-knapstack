@@ -1,15 +1,15 @@
-package main
+package problem
 
 import "math/rand"
 
 type Solution struct {
-	Bits      []int
+	Bits      []uint8
 	Fitness   int
 	PatchSize int
 }
 
-func (s Solution) clone() Solution {
-	bits := make([]int, len(s.Bits))
+func (s Solution) Clone() Solution {
+	bits := make([]uint8, len(s.Bits))
 	copy(bits, s.Bits)
 	return Solution{
 		Bits:      bits,
@@ -18,16 +18,16 @@ func (s Solution) clone() Solution {
 	}
 }
 
-func randomSolution(numItems int, rng *rand.Rand) []int {
-	bits := make([]int, numItems)
+func RandomSolution(numItems int, rng *rand.Rand) []uint8 {
+	bits := make([]uint8, numItems)
 	for i := range bits {
-		bits[i] = rng.Intn(2)
+		bits[i] = uint8(rng.Intn(2))
 	}
 	return bits
 }
 
-func neighborSolution(bits []int, patchSize int, rng *rand.Rand) []int {
-	neighbor := make([]int, len(bits))
+func NeighborSolution(bits []uint8, patchSize int, rng *rand.Rand) []uint8 {
+	neighbor := make([]uint8, len(bits))
 	copy(neighbor, bits)
 
 	effectivePatch := patchSize
