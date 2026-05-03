@@ -8,47 +8,51 @@ import (
 )
 
 func main() {
-	sizes := []int{1000, 5000, 10000, 25000, 50000, 100000}
-	const numWorkers = 8
+	const n = 50000
+	workerCounts := []int{1, 2, 4, 6, 8, 10, 12, 16}
 	const runs = 20
-	const strategyName = "WorkerPool"
+	const strategyName = "BatchedWorkerPool"
 
 	params := benchmark.DefaultParams()
 
-	fmt.Println("=== Series 1: Scaling by problem size ===")
-	fmt.Printf("Workers: %d, Strategy: %s, Runs per point: %d\n", numWorkers, strategyName, runs)
-	fmt.Printf("CPU cores available: %d\n\n", runtime.NumCPU())
+	originalProcs := runtime.GOMAXPROCS(0)
+	defer runtime.GOMAXPROCS(originalProcs)
 
-	fmt.Printf("%-10s %-25s %-25s %s\n", "Items", "Seq mean±std (ms)", "Par mean±std (ms)", "Speedup")
-	fmt.Println("-------------------------------------------------------------------")
+	problem := benchmark.RandomProblem(n, 42)
 
-	for _, n := range sizes {
-		problem := benchmark.RandomProblem(n, 42)
-		seqTimes := make([]float64, 0, runs)
+	fmt.Println("=== Series 2: Scaling by worker count ===")
+	fmt.Printf("Problem size: %d, Strategy: %s, Runs per point: %d\n", n, strategyName, runs)
+	fmt.Printf("CPU cores available: %d (original GOMAXPROCS=%d)\n", runtime.NumCPU(), originalProcs)
+
+	seqTimes := make([]float64, 0, runs)
+	for r := 0; r < runs; r++ {
+		seqTimes = append(seqTimes, benchmark.MeasureSequentialRun(problem, params, int64(r+1)))
+	}
+	seqMean, seqStd := benchmark.ComputeStats(seqTimes)
+	fmt.Printf("Sequential baseline: %.2f ± %.2f ms\n\n", seqMean, seqStd)
+
+	fmt.Printf("%-10s %-25s %-12s %s\n", "Workers", "Time mean±std (ms)", "Speedup", "Efficiency")
+	fmt.Println("---------------------------------------------------------")
+
+	for _, w := range workerCounts {
+		runtime.GOMAXPROCS(w)
+
 		parTimes := make([]float64, 0, runs)
-
 		for r := 0; r < runs; r++ {
-			seed := int64(r + 1)
-			if r%2 == 0 {
-				seqTimes = append(seqTimes, benchmark.MeasureSequentialRun(problem, params, seed))
-				strategy := benchmark.MakeStrategy(strategyName, problem, params, numWorkers, seed)
-				parTimes = append(parTimes, benchmark.MeasureRun(strategy))
-			} else {
-				strategy := benchmark.MakeStrategy(strategyName, problem, params, numWorkers, seed)
-				parTimes = append(parTimes, benchmark.MeasureRun(strategy))
-				seqTimes = append(seqTimes, benchmark.MeasureSequentialRun(problem, params, seed))
-			}
+			strategy := benchmark.MakeStrategy(strategyName, problem, params, w, int64(r+1))
+			parTimes = append(parTimes, benchmark.MeasureRun(strategy))
 		}
-
-		seqMean, seqStd := benchmark.ComputeStats(seqTimes)
 		parMean, parStd := benchmark.ComputeStats(parTimes)
 		speedup := seqMean / parMean
+		efficiency := speedup / float64(w) * 100
 
-		fmt.Printf("%-10d %-25s %-25s %.2f\n",
-			n,
-			fmt.Sprintf("%.2f ± %.2f", seqMean, seqStd),
+		fmt.Printf("%-10d %-25s %-12.2f %.0f%%\n",
+			w,
 			fmt.Sprintf("%.2f ± %.2f", parMean, parStd),
 			speedup,
+			efficiency,
 		)
+
+		runtime.GOMAXPROCS(originalProcs)
 	}
 }

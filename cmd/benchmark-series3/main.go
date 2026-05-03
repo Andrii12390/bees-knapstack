@@ -9,7 +9,7 @@ import (
 
 func main() {
 	const n = 50000
-	const numWorkers = 8
+	const numWorkers = 12
 	const runs = 20
 
 	strategies := []string{"WorkerPool", "GoroutinePerTask", "BatchedWorkerPool"}
