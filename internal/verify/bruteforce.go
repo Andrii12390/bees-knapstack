@@ -149,13 +149,13 @@ func RunVerification(strategyName string, numWorkers int) {
 		fmt.Printf("Bees Algorithm > best value found: %d\n", baValue)
 
 		if baValue == bfValue {
-			fmt.Printf("PASS — BA found the optimal solution\n")
+			fmt.Printf("PASS – BA found the optimal solution\n")
 			passes++
 		} else if baValue > 0 && float64(baValue)/float64(bfValue) >= 0.95 {
-			fmt.Printf("NEAR-OPTIMAL — BA found %.1f%% of optimal\n",
+			fmt.Printf("NEAR-OPTIMAL – BA found %.1f%% of optimal\n",
 				float64(baValue)/float64(bfValue)*100)
 		} else {
-			fmt.Printf("FAIL — BA found %d, optimal is %d\n", baValue, bfValue)
+			fmt.Printf("FAIL – BA found %d, optimal is %d\n", baValue, bfValue)
 		}
 	}
 

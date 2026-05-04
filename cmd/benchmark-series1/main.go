@@ -20,7 +20,7 @@ func main() {
 
 	problem := benchmark.RandomProblem(n, 42)
 
-	fmt.Println("=== Series 2: Scaling by worker count ===")
+	fmt.Println("=== Series 1: Scaling by worker count ===")
 	fmt.Printf("Problem size: %d, Strategy: %s, Runs per point: %d\n", n, strategyName, runs)
 	fmt.Printf("CPU cores available: %d (original GOMAXPROCS=%d)\n", runtime.NumCPU(), originalProcs)
 

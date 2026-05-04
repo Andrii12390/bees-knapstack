@@ -15,7 +15,7 @@ func main() {
 
 	params := benchmark.DefaultParams()
 
-	fmt.Println("=== Series 1: Scaling by problem size ===")
+	fmt.Println("=== Series 2: Scaling by problem size ===")
 	fmt.Printf("Workers: %d, Strategy: %s, Runs per point: %d\n", numWorkers, strategyName, runs)
 	fmt.Printf("CPU cores available: %d\n\n", runtime.NumCPU())
 

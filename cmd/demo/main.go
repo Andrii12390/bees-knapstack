@@ -72,7 +72,7 @@ func printResult(p *problem.Problem, best problem.Solution, elapsed time.Duratio
 	takenItems := p.TakenItems(best.Bits)
 	totalWeight := p.TotalWeight(best.Bits)
 
-	fmt.Println("=== Bees Algorithm — Knapsack Problem ===")
+	fmt.Println("=== Bees Algorithm – Knapsack Problem ===")
 	fmt.Printf("Capacity : %d\n\n", p.Capacity)
 
 	fmt.Println("Selected items:")
@@ -104,7 +104,7 @@ func runStrategySmokeTest() {
 	seqBest := seqBA.Run()
 	fmt.Printf("%-18s fitness=%d\n", "Sequential", seqBest.Fitness)
 
-	strategies := []string{"WorkerPool", "GoroutinePerTask", "BatchedWorkerPool""}
+	strategies := []string{"WorkerPool", "GoroutinePerTask", "BatchedWorkerPool"}
 	fitnesses := []int{seqBest.Fitness}
 
 	for _, name := range strategies {
@@ -130,8 +130,8 @@ func runStrategySmokeTest() {
 	}
 	fmt.Printf("\nSpread: %.2f%% (min=%d, max=%d)\n", spread*100, minF, maxF)
 	if spread <= tolerance {
-		fmt.Println("PASS — all strategies within 5%")
+		fmt.Println("PASS – all strategies within 5%")
 	} else {
-		fmt.Println("FAIL — strategies diverge more than 5%")
+		fmt.Println("FAIL – strategies diverge more than 5%")
 	}
 }
